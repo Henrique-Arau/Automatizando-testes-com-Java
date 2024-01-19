@@ -1,6 +1,7 @@
 package br.com.alura.adopet.api.validacoes;
 
 import br.com.alura.adopet.api.dto.SolicitacaoAdocaoDto;
+import br.com.alura.adopet.api.exception.ValidacaoException;
 import br.com.alura.adopet.api.model.Pet;
 import br.com.alura.adopet.api.repository.PetRepository;
 import org.junit.jupiter.api.Assertions;
@@ -39,6 +40,17 @@ class ValidacaoPetDisponivelTest {
 
         //Assert
         Assertions.assertDoesNotThrow(() -> validacao.validar(dto));
+    }
+
+    @Test
+    void naoDeveriaPermitirSolicitacaoDeAdocaoPet() {
+        //Arrange
+
+        BDDMockito.given(petRepository.getReferenceById(dto.idPet())).willReturn(pet);
+        BDDMockito.given(pet.getAdotado()).willReturn(true);
+
+        //Assert + Act
+        Assertions.assertThrows(ValidacaoException.class, () -> validacao.validar(dto));
     }
 
 }
