@@ -12,13 +12,11 @@ import br.com.alura.adopet.api.validacoes.ValidacaoSolicitacaoAdocao;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,8 +43,13 @@ class AdocaoServiceTest {
     @Mock
     private EmailService emailService;
 
+    @Spy
+    private List<ValidacaoSolicitacaoAdocao> validacoes = new ArrayList<>();
+
     @Mock
-    private List<ValidacaoSolicitacaoAdocao> validacoes;
+    private ValidacaoSolicitacaoAdocao validador1;
+    @Mock
+    private ValidacaoSolicitacaoAdocao validador2;
 
     @Mock
     private Pet pet;
@@ -81,6 +84,26 @@ class AdocaoServiceTest {
         Assertions.assertEquals(pet, adocaoSalva.getPet());
         Assertions.assertEquals(tutor, adocaoSalva.getTutor());
         Assertions.assertEquals(dto.motivo(), adocaoSalva.getMotivo());
+    }
+
+    @Test
+    void deveriaChamarValidadoresAoSolicitar() {
+
+        //Arrange
+        this.dto = new SolicitacaoAdocaoDto(10l, 20l, "Motivo qualquer");
+        given(petRepository.getReferenceById(dto.idPet())).willReturn(pet);
+        given(tutorRepository.getReferenceById(dto.idTutor())).willReturn(tutor);
+        given(pet.getAbrigo()).willReturn(abrigo);
+
+        validacoes.add(validador1);
+        validacoes.add(validador2);
+
+        //Act
+        service.solicitar(dto);
+
+        //Assert
+        BDDMockito.then(validador1).should().validar(dto);
+        BDDMockito.then(validador2).should().validar(dto);
     }
 
 }
